@@ -1,100 +1,3 @@
-#!/bin/bash
-
-# Gather files to run an ICON-1 simulation for a specific date
-# Author: Stephanie Westerhuis
-# Date: September 28, 2022
- 
-# Usage:
-# ./prepare_case_study.sh
-
-#####################################################################
-
-# specifications
-# --------------
-
-# date
-date="17101512"
-
-# leadtime
-leadtime="24"
-
-# grid_file: complete icon grid file for domain
-grid_file="/store/s83/swester/teamx/grid_R19B08_size_cosmo1/d01_DOM01.nc"
-
-# lateral_boundary_grid_file: subdomain covering only boundaries for LBC
-# if specified as "", this file will be created with iconsub
-# (usage of iconsub requires a working 'spack load icontools')
-lateral_boundary_grid_file="/store/s83/swester/teamx/grid_R19B08_size_cosmo1/lateral_boundary.grid.nc"
-
-# fieldextra
-if [[ `hostname` == nid* ]]; then
-    fieldextra=/users/tsm/manali/fieldextra/develop/bin/fieldextra_gnu_opt_omp
-    scr=/scratch/e1000/mch/$USER
-elif [[ `hostname` == tsa* ]]; then
-    fieldextra=/project/s83c/fieldextra/tsa/bin/fieldextra_gnu_opt_omp
-    scr=/scratch/$USER
-elif [[ `hostname` == daint* ]]; then
-    fieldextra=/project/s83c/fieldextra/daint/bin/fieldextra_gnu_opt_omp
-    scr=/scratch/snx3000/$USER/
-else
-    echo "No fieldextra executable specified for your machine."
-    exit 1
-fi
-
-# prepare date variables
-yy=${date:0:2}
-mm=${date:2:2}
-dd=${date:4:2}
-hh=${date:6:2}
-echo "Prepare case study for 20${yy} ${mm} ${dd}, ${hh} UTC: +${leadtime}h"
-
-# create working directory
-# ------------------------
-wd=${scr}/input_icon/$date
-mkdir -p $wd
-cd $wd
-#rm fx_prepare_??.nl
-
-# lateral boundary grid
-# -----------------------
-# if string is "" -> create lateral boundary grid
-if [[ "${lateral_boundary_grid_file}" == "" ]]; then
-
-    echo "Produce grid file for lateral boundary with iconsub."
-
-    # load icontools
-    spack load icontools
-
-    # write icontools namelist
-cat << EOF > iconsub_lateral_boundary.nl
-&iconsub_nml
-  grid_filename    = "${grid_file}"
-  output_type      = 4,
-  lwrite_grid      = .TRUE.,
-/
-&subarea_nml
-  ORDER            = "lateral_boundary",
-  grf_info_file    = "${grid_file}"
-  min_refin_c_ctrl = 1
-  max_refin_c_ctrl = 14
-/
-
-EOF
-
-    # run icontools namelist
-    iconsub --nml iconsub_lateral_boundary.nl
-
-    # assign produced grid file
-    lateral_boundary_grid_file="${wd}/lateral_boundary.grid.nc"
-
-else
-    echo "Use ${lateral_boundary_grid_file} for lateral boundary."
-
-fi
-
-# write fieldextra namelists
-# --------------------------
-
 # header of ic fx-namelist
 cat << EOF > fx_prepare_ic.nl
 !##############################################
@@ -172,7 +75,7 @@ cat << EOF >> fx_prepare_ic.nl
 ! Use INCORE storage to tag the COSMO mass point grid for the re-gridding of U and V 
 !----------------------------------------------------------------------------------
 &Process
-  in_file = "/store/s83/swester/teamx/cap_2017101512/orig_laf/laf2017101512"
+  in_file = "/store/s83/swester/teamx/tdf_2019091212/orig_laf/laf2019091212"
   in_model_name="cosmo"
   out_type = "INCORE"
 /
@@ -189,7 +92,7 @@ cat << EOF >> fx_prepare_ic.nl
 ! is defined in the ModelSpecification of ICON is used (and must be defined there).
 !----------------------------------------------------------------------------------
 &Process
-  in_file = "/store/s83/swester/teamx/cap_2017101512/orig_laf/laf2017101512"
+  in_file = "/store/s83/swester/teamx/tdf_2019091212/orig_laf/laf2019091212"
   in_model_name="cosmo"
   in_regrid_target="GRID_cosmo", in_regrid_method="average,square,0.9"
   out_regrid_target = "icon_grid,cell,${grid_file}"
@@ -216,6 +119,11 @@ cat << EOF >> fx_prepare_ic.nl
 &Process in_field="QS", levmin=1, levmax=80 /
 &Process in_field="QG", levmin=1, levmax=80 /
 &Process in_field="T_G" /
+&Process in_field="T_MNW_LK" /
+&Process in_field="T_WML_LK" /
+&Process in_field="H_ML_LK" /
+&Process in_field="T_BOT_LK" /
+&Process in_field="C_T_LK" /
 &Process in_field="QV_S" /
 &Process in_field="T_SO" /
 &Process in_field="FRESHSNW" /
@@ -242,6 +150,11 @@ cat << EOF >> fx_prepare_ic.nl
 &Process tmp1_field="QS", /
 &Process tmp1_field="QG", /
 &Process tmp1_field="T_G" /
+&Process tmp1_field="T_MNW_LK" /
+&Process tmp1_field="T_WML_LK" /
+&Process tmp1_field="H_ML_LK" /
+&Process tmp1_field="T_BOT_LK" /
+&Process tmp1_field="C_T_LK" /
 &Process tmp1_field="QV_S" /
 &Process tmp1_field="T_SO" /
 &Process tmp1_field="W_I" /
@@ -259,11 +172,6 @@ cat << EOF >> fx_prepare_ic.nl
 &Process tmp1_field="FR_LAND", tag="FR_LAND_clone_1", poper="replace_all,0.", new_field_id="FR_ICE" /
 &Process tmp1_field="H_SNOW", tag="H_SNOW_clone_1", poper="replace_all,0.", new_field_id="H_ICE" /
 &Process tmp1_field="T_G", tag="T_G_clone_1", poper="replace_all,273.15", new_field_id="T_ICE" /
-&Process tmp1_field="T_G", tag="T_G_clone_2", poper="replace_all,0.", new_field_id="T_MNW_LK" /
-&Process tmp1_field="T_G", tag="T_G_clone_3", poper="replace_all,0.", new_field_id="T_WML_LK" /
-&Process tmp1_field="H_SNOW", tag="H_SNOW_clone_2", poper="replace_all,0.", new_field_id="H_ML_LK" /
-&Process tmp1_field="T_G", tag="T_G_clone_4", poper="replace_all,0.", new_field_id="T_BOT_LK" /
-&Process tmp1_field="FR_LAND", tag="FR_LAND_clone_2", poper="replace_all,0.", new_field_id="C_T_LK" /
 
 
 !----------------------------------------------------------------------------------
@@ -349,7 +257,7 @@ cat << EOF >> fx_prepare_bc.nl
 ! A) for IFS analysis field
 !----------------------------------------------------------------------------------
 &Process
-  in_file = "/store/s83/swester/teamx/cap_20${date}/orig_ifs/eas20${date}"
+  in_file = "/store/s83/swester/teamx/tdf_20${date}/orig_ifs/eas20${date}"
   out_type="INCORE"
 /
 &Process in_field = "FIS" /
@@ -364,7 +272,7 @@ cat << EOF >> fx_prepare_bc.nl
 &Process in_field = "FIS", set_reference_date=20${date} /
 
 &Process
-  in_file = "/store/s83/swester/teamx/cap_20${date}/orig_ifs/eas20${date}"
+  in_file = "/store/s83/swester/teamx/tdf_20${date}/orig_ifs/eas20${date}"
   out_regrid_target = "icon_grid,multiple,${lateral_boundary_grid_file}"
   out_regrid_method = "default"
   out_file = "${wd}/efsf00000000_lbc.nc",
@@ -406,7 +314,7 @@ cat << EOF >> fx_prepare_bc.nl
 &Process in_field = "FIS", set_reference_date=20${date} /
 
 &Process
-  in_file = "/store/s83/swester/teamx/cap_20${date}/orig_ifs/efsf<DDHH>0000"
+  in_file = "/store/s83/swester/teamx/tdf_20${date}/orig_ifs/efsf<DDHH>0000"
   out_regrid_target = "icon_grid,multiple,${lateral_boundary_grid_file}"
   out_regrid_method = "default"
   out_file = "${wd}/efsf<DDHH>0000_lbc.nc",
@@ -438,11 +346,3 @@ cat << EOF >> fx_prepare_bc.nl
 &Process out_field = "FIS", tag="GEOP_ML" /
 
 EOF
-
-# run fieldextra
-#$fieldextra fx_prepare_ic.nl
-#$fieldextra fx_prepare_bc.nl
-
-echo "Fieldextra namelist for regridding IC:" ${wd}/fx_prepare_ic.nl
-echo "Fieldextra namelist for regridding BC:" ${wd}/fx_prepare_bc.nl
-echo "LBC- and INI-files in:" ${wd}
