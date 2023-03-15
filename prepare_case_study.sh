@@ -34,15 +34,24 @@ if [[ $(hostname -s) == balfrin* ]]; then
     fieldextra=/users/oprusers/osm/bin/fieldextra
     PATH_FIELDEXTRA_RESOURCES="/users_global/osm/opr/config/resources"
 elif [[ `hostname` == tsa* ]]; then
-    source $SPACK_ROOT/share/spack/setup-env.sh
+    module load python
+    source /project/g110/spack/user/admin-tsa/spack/share/spack/setup-env.sh
     fieldextra=/project/s83c/fieldextra/tsa/bin/fieldextra_gnu_opt_omp
     PATH_FIELDEXTRA_RESOURCES="/project/s83c/fieldextra/tsa/resources"
 elif [[ `hostname` == daint* ]]; then
+    module load python
+    source /project/g110/spack/user/admin-daint/spack/share/spack/setup-env.sh
     fieldextra=/project/s83c/fieldextra/daint/bin/fieldextra_gnu_opt_omp
     PATH_FIELDEXTRA_RESOURCES="/project/s83c/fieldextra/tsa/resources"
 else
     echo "No fieldextra executable specified for your machine."
     exit 1
+fi
+
+if [[ ! -z "${JENKINS_DIR}" ]]; then
+  scr=${JENKINS_DIR}
+  echo "--- Jenkins dir:"
+  echo $scr
 fi
 
 # default leadtime
@@ -80,7 +89,7 @@ yy=${date:0:2}
 mm=${date:2:2}
 dd=${date:4:2}
 hh=${date:6:2}
-echo "Prepare case study for 20${yy} ${mm} ${dd}, ${hh} UTC: +${leadtime}h"
+echo "--- Prepare case study for 20${yy} ${mm} ${dd}, ${hh} UTC: +${leadtime}h"
 
 # -----------------------------------------------
 # create working directory
@@ -88,6 +97,9 @@ echo "Prepare case study for 20${yy} ${mm} ${dd}, ${hh} UTC: +${leadtime}h"
 wd=${SCRATCH}/input_icon/$date
 mkdir -p $wd
 cd $wd
+echo "--- Working directory"
+echo "$(pwd)"
+
 #rm fx_prepare_??.nl
 
 # -----------------------------------------------
@@ -114,8 +126,12 @@ spack load icontools ||   echo "==> installing icontools (may take a moment)"; s
 # if string is "" -> create lateral boundary grid
 if [[ "${lateral_boundary_grid_file}" == "" ]]; then
 
-    echo "Produce grid file for lateral boundary with iconsub."
-   
+
+    echo "--- Produce grid file for lateral boundary with iconsub."
+
+    # load icontools
+    spack load icontools
+    echo "--- Finished loading icontools"
 
     # write icontools namelist
 cat << EOF > iconsub_lateral_boundary.nl
@@ -134,14 +150,14 @@ cat << EOF > iconsub_lateral_boundary.nl
 EOF
 
     # run icontools namelist
-    spack load icontools
-    iconsub --nml iconsub_lateral_boundary.nl
+
+    `spack location -i icontools`/bin/iconsub --nml iconsub_lateral_boundary.nl
 
     # assign produced grid file
     lateral_boundary_grid_file="${wd}/lateral_boundary.grid.nc"
 
 else
-    echo "Use ${lateral_boundary_grid_file} for lateral boundary."
+    echo "--- Use ${lateral_boundary_grid_file} for lateral boundary."
 
 fi
 
@@ -478,6 +494,8 @@ $fieldextra fx_prepare_bc.nl
 # -----------------------------------------------
 # write useful output to screen
 # -----------------------------------------------
-echo "Fieldextra namelist for regridding IC:" ${wd}/fx_prepare_ic.nl
-echo "Fieldextra namelist for regridding BC:" ${wd}/fx_prepare_bc.nl
-echo "LBC- and INI-files in:" ${wd}
+echo "--- Fieldextra namelist for regridding IC:"
+echo "${wd}/fx_prepare_ic.nl"
+echo "--- Fieldextra namelist for regridding BC:"
+echo "${wd}/fx_prepare_bc.nl"
+echo "--- LBC- and INI-files in:"
