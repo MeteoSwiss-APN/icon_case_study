@@ -51,6 +51,9 @@ else
     exit 1
 fi
 
+ulimit -s unlimited
+export OMP_STACKSIZE=500M
+                            
 if [[ ! -z "${JENKINS_DIR}" ]]; then
   scr=${JENKINS_DIR}
   echo "--- Jenkins dir:"
