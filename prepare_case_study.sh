@@ -1,17 +1,12 @@
 #!/bin/bash
 
-# Gather files to run an ICON-1 simulation for a specific date
+# Gather files to run an ICON-simulation for a specific date
 # Author: Stephanie Westerhuis
 # Date: July 15, 2022
  
 # Usage:
-# /path/to/prepare_case_study.sh YYMMDDHH
+# /path/to/prepare_case_study.sh YYMMDDHH HH
 # e.g. ./prepare_case_study.sh 22011800 24
-
-# Note:
-# Put the following lines into your .bashrc for usage of fieldextra
-# ulimit -s unlimited
-# export OMP_STACKSIZE=500M
 
 #####################################################################
 
@@ -21,11 +16,10 @@
 
 # grid_file: complete icon grid file for domain
 grid_file="/store/s83/tsm/ICON_INPUT/icon-1e_dev/ICON-1E_DOM01.nc"
-# grid_file="/store/s83/tsm/ICON_INPUT/icon-ch2_dace/icon-ch2_DOM01.nc"
 
 # lateral_boundary_grid_file: subdomain covering only boundaries for LBC
 #  if specified as "", this file will be created with iconsub
-#  (usage of iconsub requires a working 'spack load icontools')
+#  (usage of iconsub requires the icontools)
 lateral_boundary_grid_file=""
 #lateral_boundary_grid_file="/store/s83/tsm/ICON_INPUT/icon-1e_dev/lateral_boundary.grid.nc"
 
@@ -48,12 +42,18 @@ else
     exit 1
 fi
 
+# load for using fieldextra
 ulimit -s unlimited
 export OMP_STACKSIZE=500M
                             
-if [[ ! -z "${JENKINS_DIR}" ]]; then
+if [[ ! -z "${JENKINS_DIR}" ]]
+then
   scr=${JENKINS_DIR}
   echo "--- Jenkins dir:"
+  echo $scr
+else
+  scr=${SCRATCH}
+  echo "--- Scratch dir:"
   echo $scr
 fi
 
@@ -97,13 +97,11 @@ echo "--- Prepare case study for 20${yy} ${mm} ${dd}, ${hh} UTC: +${leadtime}h"
 # -----------------------------------------------
 # create working directory
 # -----------------------------------------------
-wd=${SCRATCH}/input_icon/$date
+wd=${scr}/input_icon/$date
 mkdir -p $wd
 cd $wd
 echo "--- Working directory"
 echo "$(pwd)"
-
-#rm fx_prepare_??.nl
 
 # -----------------------------------------------
 # Install software
@@ -111,17 +109,18 @@ echo "$(pwd)"
 
 # Install spack if spack if not available
 # TODO (DL: 15.02.2022): Fix spack installation once balfrin is back to normal
-if ! command -v spack &> /dev/null; then
-    echo "The spack package manager could not be found. Installing to scratch."
-    cd $SCRATCH
-    if [ ! -d spack-c2sm ]; then
-      git clone --depth 1 --recurse-submodules --shallow-submodules -b dev_v0.18.1 git@github.com:C2SM/spack-c2sm.git
-    fi
-    . spack-c2sm/setup-env.sh
-fi
+#if ! command -v spack &> /dev/null; then
+#    echo "The spack package manager could not be found. Installing to scratch."
+#    cd $SCRATCH
+#    if [ ! -d spack-c2sm ]; then
+#      git clone --depth 1 --recurse-submodules --shallow-submodules -b dev_v0.18.1 git@github.com:C2SM/spack-c2sm.git
+#    fi
+#    . spack-c2sm/setup-env.sh
+#fi
 
 # Install icontools if needed
-spack load icontools ||   echo "==> installing icontools (may take a moment)"; spack install icontools
+#spack load icontools ||   echo "==> installing icontools (may take a moment)"; spack install icontools
+
 
 # -----------------------------------------------
 # lateral boundary grid
@@ -491,8 +490,8 @@ fi # leadtime > 0
 # -----------------------------------------------
 # run fieldextra
 # -----------------------------------------------
-$fieldextra fx_prepare_ic.nl
-$fieldextra fx_prepare_bc.nl
+#$fieldextra fx_prepare_ic.nl
+#$fieldextra fx_prepare_bc.nl
 
 # -----------------------------------------------
 # write useful output to screen
@@ -502,3 +501,4 @@ echo "${wd}/fx_prepare_ic.nl"
 echo "--- Fieldextra namelist for regridding BC:"
 echo "${wd}/fx_prepare_bc.nl"
 echo "--- LBC- and INI-files in:"
+echo "${wd}"
