@@ -132,7 +132,7 @@ if [[ "${lateral_boundary_grid_file}" == "" ]]; then
     echo "--- Produce grid file for lateral boundary with iconsub."
 
     # load icontools
-    spack load icontools
+    spack load icontools@c2sm-master
     echo "--- Finished loading icontools"
 
     # write icontools namelist
@@ -153,7 +153,7 @@ EOF
 
     # run icontools namelist
 
-    `spack location -i icontools`/bin/iconsub --nml iconsub_lateral_boundary.nl
+    `spack location -i icontools@c2sm-master`/bin/iconsub --nml iconsub_lateral_boundary.nl
 
     # assign produced grid file
     lateral_boundary_grid_file="${wd}/lateral_boundary.grid.nc"
@@ -490,8 +490,8 @@ fi # leadtime > 0
 # -----------------------------------------------
 # run fieldextra
 # -----------------------------------------------
-#$fieldextra fx_prepare_ic.nl
-#$fieldextra fx_prepare_bc.nl
+$fieldextra fx_prepare_ic.nl
+$fieldextra fx_prepare_bc.nl
 
 # -----------------------------------------------
 # write useful output to screen
