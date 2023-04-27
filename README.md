@@ -17,7 +17,7 @@ This script creates the analysis and boundary files for ICON simulations for a s
 
 ## requirements
 * fieldextra
-* python & spack -> icontools
+* spack -> icontools
 
 ## usage
 ``/path/to/prepare_case_study.sh YYMMDDHH HH``
