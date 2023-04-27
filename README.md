@@ -1,5 +1,11 @@
-# prepare_icon_case_study
+# icon_case_study
 Prepare case studies for running the ICON model following the MeteoSwiss setup.
+
+## usage
+``/path/to/prepare_case_study.sh YYMMDDHH HH``
+
+-> the last argument refers to the leadtime, default = 2h
+
 
 ## Description
 This script creates the analysis and boundary files for ICON simulations for a specified ICON grid. More specifically, it writes fieldextra- and iconsub-namelists which are executed at the end. Boundaries stem from IFS-HRES and the initial conditions are based on COSMO analyses. Note the following:
@@ -14,15 +20,9 @@ This script creates the analysis and boundary files for ICON simulations for a s
 * ICON requires the boundaries to include the geopotential (FI). As this is missing in the archive, osm provides a hack-file (with FI which is however called FIS to match fieldextra's requirements): `/store/s83/tsm/ICON_INPUT/ifs-hres/ifs-hres-bc_fi_ml1_137x091_01.grb2` from which FIS is retrieved. This does however only match files since 2020. For older cases, it is recommended to retrieve FIS from the eas-file.
 * If OMEGA is missing in the provided boundaries, removal of the corresponding lines in the fieldextra namelist will trigger ICON to calculate OMEGA during runtime. Tests (conducted by Guy at the time) did not show significant differences.
 
-
 ## requirements
 * fieldextra
 * spack -> icontools
-
-## usage
-``/path/to/prepare_case_study.sh YYMMDDHH HH``
-
--> the last argument refers to the leadtime, default = 2h
 
 ## file overview
 * ``prepare_case_study.sh`` : default script
