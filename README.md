@@ -15,7 +15,7 @@ This script creates the analysis and boundary files for ICON simulations for a s
 * If OMEGA is missing in the provided boundaries, removal of the corresponding lines in the fieldextra namelist will trigger ICON to calculate OMEGA during runtime. Tests (conducted by Guy at the time) did not show significant differences.
 
 
-## requirements
+## requirements 
 * fieldextra
 * spack -> icontools
 
