@@ -119,6 +119,7 @@ echo "$(pwd)"
 #fi
 
 # Install icontools if needed
+# According to Dominic we could only do a `spack install icontools` since it now "does nothing" if it finds the corresponding exe
 #spack load icontools ||   echo "==> installing icontools (may take a moment)"; spack install icontools
 
 
