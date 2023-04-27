@@ -108,19 +108,18 @@ echo "$(pwd)"
 # -----------------------------------------------
 
 # Install spack if spack if not available
-# TODO (DL: 15.02.2022): Fix spack installation once balfrin is back to normal
-#if ! command -v spack &> /dev/null; then
-#    echo "The spack package manager could not be found. Installing to scratch."
-#    cd $SCRATCH
-#    if [ ! -d spack-c2sm ]; then
-#      git clone --depth 1 --recurse-submodules --shallow-submodules -b dev_v0.18.1 git@github.com:C2SM/spack-c2sm.git
-#    fi
-#    . spack-c2sm/setup-env.sh
-#fi
+if ! command -v spack &> /dev/null; then
+    echo "The spack package manager could not be found. Installing to scratch."
+    cd $SCRATCH
+    if [ ! -d spack-c2sm ]; then
+      git clone --depth 1 --recurse-submodules --shallow-submodules -b v0.18.1.3 git@github.com:C2SM/spack-c2sm.git
+    fi
+    . spack-c2sm/setup-env.sh
+fi
 
 # Install icontools if needed
-# According to Dominic we could only do a `spack install icontools` since it now "does nothing" if it finds the corresponding exe
-#spack load icontools ||   echo "==> installing icontools (may take a moment)"; spack install icontools
+spack install icontools@c2sm-master # Does nothing if current version is already installed
+spack load icontools@c2sm-master
 
 
 # -----------------------------------------------
