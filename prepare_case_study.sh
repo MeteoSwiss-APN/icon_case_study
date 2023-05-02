@@ -119,8 +119,6 @@ fi
 
 # Install icontools if needed
 spack install icontools@c2sm-master # Does nothing if current version is already installed
-spack load icontools@c2sm-master
-
 
 # -----------------------------------------------
 # lateral boundary grid
