@@ -1,4 +1,4 @@
-´´´´This repository is deprecated and unmaintained´´´´ 
+$${\color{red}This repository is deprecated and unmaintained}$$
 
 # icon_case_study
 Prepare case studies for running the ICON model following the MeteoSwiss setup.
