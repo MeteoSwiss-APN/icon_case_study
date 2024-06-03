@@ -1,4 +1,4 @@
-#  <span style="color:blue"> This repository is deprecated/unmaintained </span>.
+<span style="color:blue"> This repository is deprecated/unmaintained </span>.
 
 # icon_case_study
 Prepare case studies for running the ICON model following the MeteoSwiss setup.
